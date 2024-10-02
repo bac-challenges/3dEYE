@@ -75,7 +75,6 @@ private struct WeatherDayRow: View {
             Text("Max Temp: \(String(format: "%.1f", day.tempmax))°C")
             Text("Min Temp: \(String(format: "%.1f", day.tempmin))°C")
             Text("Dew: \(String(format: "%.1f", day.dew))")
-            Text("Humidity: \(String(format: "%.1f", day.humidity))%")
             Text("Sunrise: \(day.sunrise)")
             Text("Sunset: \(day.sunset)")
         }

@@ -55,7 +55,8 @@ final class WeatherService: WeatherServiceProtocol {
     
     // MARK: - URL Construction
     private func constructURL(for location: String) -> URL? {
-        let queryParameters = "today?unitGroup=metric&elements=\(elements)"
+        let queryParameters = "?unitGroup=metric&elements=\(elements)"
+        // sofia?unitGroup=metric&elements=datetime%2Ctempmax%2Ctempmin&include=alerts%2Cdays&key=P5DWQL3AWZWQWBX9NTNSPWPYF&contentType=json
         let contentType = "&contentType=json"
         
         let urlString = "\(baseURL)/\(location)/\(queryParameters)&key=\(apiKey)\(contentType)"
@@ -66,11 +67,11 @@ final class WeatherService: WeatherServiceProtocol {
 // MARK: - WeatherServiceMock
 final class WeatherServiceMock: WeatherServiceProtocol {
     enum MockBehavior {
-        case success(WeatherLocation)            // Simulates a successful weather fetch with location and 10 days of weather data.
-        case failure(WeatherServiceError)        // Simulates a failure in fetching weather data.
+        case success(WeatherLocation)
+        case failure(WeatherServiceError)
     }
     
-    private var behavior: MockBehavior           // Stores the predefined behavior (success or failure).
+    private var behavior: MockBehavior
     
     init(behavior: MockBehavior) {
         self.behavior = behavior
@@ -80,49 +81,47 @@ final class WeatherServiceMock: WeatherServiceProtocol {
     func fetch(for location: String) async throws -> WeatherLocation {
         switch behavior {
         case .success(let mockWeatherLocation):
-            return mockWeatherLocation  // Return the mock weather location data on success.
+            return mockWeatherLocation
         case .failure(let error):
-            throw error  // Throw the predefined error on failure.
+            throw error
         }
     }
 }
 
-// MARK: - WeatherServiceMock Extension (Helper Methods)
+// MARK: - WeatherServiceMock (Helper Methods)
 extension WeatherServiceMock {
-
+    
     // MARK: - Random Data Generation
     static func withRandomData() -> WeatherServiceMock {
-        let randomWeatherData = (0..<10).map { _ in
+        let randomWeatherData = (0..<10).map { dayOffset in
             WeatherData(
-                datetime: randomDateString(),
-                datetimeEpoch: randomEpoch(),
+                datetime: dateString(from: dayOffset),
+                datetimeEpoch: epoch(from: dayOffset),
                 tempmax: Double.random(in: 15...35),
                 tempmin: Double.random(in: 5...15),
-                temp: Double.random(in: 10...25),
-                feelslikemax: Double.random(in: 15...35),
-                feelslikemin: Double.random(in: 5...15),
-                feelslike: Double.random(in: 10...25),
                 dew: Double.random(in: 5...20),
-                humidity: Double.random(in: 50...100),
                 sunrise: randomTime(),
-                sunset: randomTime()
+                sunset: randomTime(),
+                hours: randomHourlyData()
             )
         }
         
         let randomWeatherLocation = WeatherLocation(
-            queryCost: 1,                                  // Random query cost.
-            latitude: Double.random(in: -90...90),         // Random latitude.
-            longitude: Double.random(in: -180...180),      // Random longitude.
-            resolvedAddress: randomCityName(),             // Random city name.
-            address: randomCityName(),                     // Random short address.
-            timezone: "Europe/\(randomCityName())",        // Random timezone.
-            tzoffset: Int.random(in: -12...12),            // Random timezone offset.
-            days: randomWeatherData                        // The array of 10 days of weather data.
+            queryCost: 1,
+            latitude: Double.random(in: -90...90),
+            longitude: Double.random(in: -180...180),
+            resolvedAddress: randomCityName(),
+            address: randomCityName(),
+            timezone: "Europe/\(randomCityName())",
+            tzoffset: Double.random(in: -12...12),
+            days: randomWeatherData,
+            alerts: [],
+            currentConditions: randomCurrentConditions()
         )
         
         return WeatherServiceMock(behavior: .success(randomWeatherLocation))
     }
-
+    
     static func withRandomError() -> WeatherServiceMock {
         let possibleErrors: [WeatherServiceError] = [
             .invalidURL,
@@ -130,7 +129,7 @@ extension WeatherServiceMock {
             .decodingError(NSError(domain: "", code: -1, userInfo: nil)),
             .unknownError
         ]
-
+        
         let randomError = possibleErrors.randomElement() ?? .unknownError
         return WeatherServiceMock(behavior: .failure(randomError))
     }
@@ -141,17 +140,15 @@ extension WeatherServiceMock {
         return cities.randomElement() ?? "Unknown City"
     }
     
-    private static func randomDateString() -> String {
-        let randomDays = Int.random(in: 0...10)
-        let currentDate = Calendar.current.date(byAdding: .day, value: randomDays, to: Date())!
+    private static func dateString(from dayOffset: Int) -> String {
+        let currentDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: Date())!
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: currentDate)
     }
     
-    private static func randomEpoch() -> Int {
-        let randomDays = Int.random(in: 0...10)
-        let currentDate = Calendar.current.date(byAdding: .day, value: randomDays, to: Date())!
+    private static func epoch(from dayOffset: Int) -> Int {
+        let currentDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: Date())!
         return Int(currentDate.timeIntervalSince1970)
     }
     
@@ -161,7 +158,22 @@ extension WeatherServiceMock {
         let second = Int.random(in: 0...59)
         return String(format: "%02d:%02d:%02d", hour, minute, second)
     }
+    
+    private static func randomHourlyData() -> [WeatherHour] {
+        return (0..<24).map { _ in
+            WeatherHour(dew: Double.random(in: -5...10))
+        }
+    }
+    
+    private static func randomCurrentConditions() -> CurrentConditions {
+        return CurrentConditions(
+            dew: Double.random(in: 0...20),
+            sunrise: randomTime(),
+            sunset: randomTime()
+        )
+    }
 }
+
 // MARK: - Bundle Extension
 private extension Bundle {
     var apiURL: String {

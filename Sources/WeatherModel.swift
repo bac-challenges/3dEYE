@@ -15,8 +15,10 @@ struct WeatherLocation: Codable, Identifiable {
     let resolvedAddress: String
     let address: String
     let timezone: String
-    let tzoffset: Int
+    let tzoffset: Double
     let days: [WeatherData]
+    let alerts: [String]
+    let currentConditions: CurrentConditions
 }
 
 // MARK: - WeatherData
@@ -28,15 +30,22 @@ struct WeatherData: Codable, Identifiable {
     
     let tempmax: Double
     let tempmin: Double
-    let temp: Double
-    
-    let feelslikemax: Double
-    let feelslikemin: Double
-    let feelslike: Double
     
     let dew: Double
-    let humidity: Double
+    let sunrise: String
+    let sunset: String
     
+    let hours: [WeatherHour]
+}
+
+// MARK: - WeatherHour
+struct WeatherHour: Codable {
+    let dew: Double
+}
+
+// MARK: - CurrentConditions
+struct CurrentConditions: Codable {
+    let dew: Double
     let sunrise: String
     let sunset: String
 }
