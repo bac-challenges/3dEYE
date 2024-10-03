@@ -77,8 +77,8 @@ private struct WeatherDayRow: View {
             HStack(alignment: .bottom) {
                 if day.dateString() == "Today" {
                     HStack(alignment: .bottom) {
-                        Text(day.dateString())
-                            .font(.title2)
+                        Text("Now")
+                            .font(.largeTitle)
                         Spacer()
                         Text("\(String(format: "%.0f", day.temp))°")
                             .foregroundColor(.secondary)
