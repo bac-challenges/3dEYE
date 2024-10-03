@@ -1,1 +1,1 @@
-Simple Wather app implemented with Swift, SwiftUI and MVVM
+Simple Weather app implemented using Swift, SwiftUI and MVVM
