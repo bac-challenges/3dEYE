@@ -108,7 +108,7 @@ final class LocationServiceMock: LocationServiceProtocol {
     private let failureType: LocationError?
     private let city: String
     
-    init(shouldFail: Bool = false, failureType: LocationError? = nil, city: String = "New York") {
+    init(shouldFail: Bool = false, failureType: LocationError? = nil, city: String = "London") {
         self.shouldFail = shouldFail
         self.failureType = failureType
         self.city = city

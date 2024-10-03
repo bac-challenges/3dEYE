@@ -29,10 +29,10 @@ struct WeatherView: View {
     var body: some View {
         VStack {
             switch viewModel.state {
-            case .idle: Text("Ready to load weather data.")
-            case .loading: ProgressView("Fetching weather...")
+            case .idle: Text("weather_view_ready_to_load_data")
+            case .loading: ProgressView("weather_view_fetching_data")
             case .success(let location): successView(location)
-            case .noData: Text("No weather data available.")
+            case .noData: Text("weather_view_no_data_available")
             case .failure(let errorMessage): failureView(errorMessage)
             }
         }.onAppear(perform: loadWeather)
@@ -48,10 +48,13 @@ struct WeatherView: View {
     // MARK: - Helper Views
     private func successView(_ location: WeatherLocation) -> some View {
         VStack {
-            Text("City: \(location.resolvedAddress)").font(.title2)
+            Text(location.address).font(.title)
             List(location.days) { day in
-                WeatherDayRow(day: day)
+                VStack(alignment: .leading) {
+                    WeatherDayRow(day: day)
+                }
             }
+            .listStyle(.plain)
         }
     }
 
@@ -61,49 +64,109 @@ struct WeatherView: View {
                 .multilineTextAlignment(.center)
                 .foregroundColor(.red)
             
-            Button("Retry", action: loadWeather)
+            Button("button_retry", action: loadWeather)
         }.padding()
     }
 }
 
-// MARK: -
+// MARK: - WeatherDayRow
 private struct WeatherDayRow: View {
     let day: WeatherData
     var body: some View {
         VStack(alignment: .leading) {
-            Text(day.dayName).font(.headline)
-            Text("Max Temp: \(String(format: "%.1f", day.tempmax))°C")
-            Text("Min Temp: \(String(format: "%.1f", day.tempmin))°C")
-            Text("Dew: \(String(format: "%.1f", day.dew))")
-            Text("Sunrise: \(day.sunrise)")
-            Text("Sunset: \(day.sunset)")
+            HStack(alignment: .bottom) {
+                if day.dateString() == "Today" {
+                    HStack(alignment: .bottom) {
+                        Text(day.dateString())
+                            .font(.title2)
+                        Spacer()
+                        Text("\(String(format: "%.0f", day.temp))°")
+                            .foregroundColor(.secondary)
+                            .font(.largeTitle)
+                        Spacer()
+                    }
+                }
+                else {
+                    Text(day.dateString()).font(.title2)
+                }
+                
+                Spacer()
+                WeatherElement(icon: "arrow.up", text: "\(String(format: "%.0f", day.tempmax))°")
+                WeatherElement(icon: "arrow.down", text: "\(String(format: "%.0f", day.tempmin))°")
+                WeatherElement(icon: "sunrise", text: day.formattedSunrise)
+                WeatherElement(icon: "sunset", text: day.formattedSunset)
+            }
+            
+            Text(day.description)
+                .foregroundColor(.secondary)
         }
         .listRowBackground(Color.clear)
+        .padding(.vertical, 10)
+    }
+}
+
+// MARK: - WeatherElement
+private struct WeatherElement: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(alignment: .center, spacing: 0) {
+            
+            Image(systemName: icon)
+                .foregroundColor(.secondary)
+                .font(.caption2)
+
+            Text(text)
+                .font(.callout)
+        }
         .padding(.vertical, 4)
     }
 }
 
-// MARK: -
+// MARK: - UI Helpers
 private extension WeatherData {
-    var dayName: String {
-        let currentDate = Calendar.current.startOfDay(for: Date())
-        let forecastDate = Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(datetimeEpoch)))
+    
+    func dateString() -> String {
+        self.formattedDate(for: TimeInterval(self.datetimeEpoch))
+    }
+    
+    func formattedDate(for forecastEpoch: TimeInterval, dayLimit: Int = 6) -> String {
+        let calendar = Calendar.current
+        let currentDate = calendar.startOfDay(for: Date())
+        let forecastDate = calendar.startOfDay(for: Date(timeIntervalSince1970: forecastEpoch))
         
-        let dayDifference = Calendar.current.dateComponents([.day], from: currentDate, to: forecastDate).day ?? 0
+        let dayDifference = calendar.dateComponents([.day], from: currentDate, to: forecastDate).day ?? 0
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
         
         switch dayDifference {
-        case 0: return "Today"
-        case 1: return "Tomorrow"
+        // TODO: Handle time difference in API result, replace with correcting dates for location
+        case -1:
+            return "Yesterday"
+        case 0:
+            return "Today"
+        case 1:
+            return "Tomorrow"
         default:
-            return WeatherData.dayFormatter.string(from: forecastDate)
+            return formatter.string(from: forecastDate)
         }
     }
     
-    private static let dayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE"  // e.g., "Sunday"
-        return formatter
-    }()
+    var formattedSunrise: String {
+        removeSeconds(sunrise)
+    }
+    
+    var formattedSunset: String {
+        removeSeconds(sunset)
+    }
+    
+    func removeSeconds(_ time: String) -> String {
+        let components = time.split(separator: ":")
+        guard components.count == 3 else { return time } // Ensure it's in "HH:mm:ss" format
+        return "\(components[0]):\(components[1])"  // Return "HH:mm"
+    }
 }
 
 // MARK: - Previews

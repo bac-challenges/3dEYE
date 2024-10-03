@@ -28,12 +28,15 @@ struct WeatherData: Codable, Identifiable {
     let datetime: String
     let datetimeEpoch: Int
     
+    let temp: Double
     let tempmax: Double
     let tempmin: Double
     
     let dew: Double
     let sunrise: String
     let sunset: String
+    
+    let description: String
     
     let hours: [WeatherHour]
 }

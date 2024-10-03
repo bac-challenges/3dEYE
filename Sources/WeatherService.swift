@@ -97,11 +97,13 @@ extension WeatherServiceMock {
             WeatherData(
                 datetime: dateString(from: dayOffset),
                 datetimeEpoch: epoch(from: dayOffset),
+                temp: Double.random(in: 0...20),
                 tempmax: Double.random(in: 15...35),
                 tempmin: Double.random(in: 5...15),
                 dew: Double.random(in: 5...20),
                 sunrise: randomTime(),
                 sunset: randomTime(),
+                description: "Partly cloudy throughout the day.",
                 hours: randomHourlyData()
             )
         }
@@ -110,9 +112,9 @@ extension WeatherServiceMock {
             queryCost: 1,
             latitude: Double.random(in: -90...90),
             longitude: Double.random(in: -180...180),
-            resolvedAddress: randomCityName(),
-            address: randomCityName(),
-            timezone: "Europe/\(randomCityName())",
+            resolvedAddress: randomResolvedAddress(),
+            address: randomAddress(),
+            timezone: "Europe/\(randomAddress())",
             tzoffset: Double.random(in: -12...12),
             days: randomWeatherData,
             alerts: [],
@@ -135,9 +137,24 @@ extension WeatherServiceMock {
     }
     
     // MARK: - Helper Methods for Random Data Generation
-    private static func randomCityName() -> String {
-        let cities = ["New York", "London", "Tokyo", "Paris", "Berlin", "Sydney"]
-        return cities.randomElement() ?? "Unknown City"
+    private static func randomAddress() -> String {
+        let address = ["New York",
+                      "London",
+                      "Tokyo",
+                      "Paris",
+                      "Berlin",
+                      "Sydney"]
+        return address.randomElement() ?? "Unknown address"
+    }
+    
+    private static func randomResolvedAddress() -> String {
+        let address = ["New York, NY, United States",
+                      "London, England, United Kingdom",
+                      "Tokyo, Japan",
+                      "Paris, ÃŽle-de-France, France",
+                      "Berlin, Deutschland",
+                      "Sydney, NSW 2000, Australia"]
+        return address.randomElement() ?? "Unknown resolved address"
     }
     
     private static func dateString(from dayOffset: Int) -> String {
