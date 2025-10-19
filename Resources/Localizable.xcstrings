@@ -47,6 +47,9 @@
         }
       }
     },
+    "Now" : {
+
+    },
     "weather_view_fetching_data" : {
       "localizations" : {
         "en" : {
